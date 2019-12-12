@@ -1,0 +1,13 @@
+.DS_Store
+/.build
+/Packages
+/*.xcodeproj
+/doc
+/*.sh
+/log/monitor.log
+/log
+/conf/config.json
+/tmp
+/conf
+/testData
+/data

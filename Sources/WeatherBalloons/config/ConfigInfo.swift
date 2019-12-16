@@ -11,5 +11,6 @@ public struct ConfigInfo: Codable {
     public let host: String
     public let user: String
     public let pawd: String
+    public let intervalDays: Int
 }
 

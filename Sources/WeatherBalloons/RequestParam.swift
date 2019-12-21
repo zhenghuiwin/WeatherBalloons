@@ -25,7 +25,7 @@ public struct RequestParam {
     
    
     
-    init(interface: String, dataCode: String, elements: [String], params: [String : String], config: ConfigInfo, timeRange: [String]) {
+    public init(interface: String, dataCode: String, elements: [String], params: [String : String], config: ConfigInfo, timeRange: [String]) {
         self.interface = interface
         self.dataCode = dataCode
         self.elements = elements

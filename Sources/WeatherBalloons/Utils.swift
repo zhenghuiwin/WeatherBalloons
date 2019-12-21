@@ -21,6 +21,7 @@ public class Utils {
         var next: Date = nextTime(from: start, by: daysHour)!
         var compare = next.compare(end)
         while compare == .orderedAscending {
+            // next < end
             // slice.append( [startDate, nextTenDays] )
             slice.append(DateInterval(start: start, end: next))
             

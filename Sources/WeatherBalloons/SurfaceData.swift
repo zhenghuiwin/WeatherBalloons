@@ -8,6 +8,9 @@
 import Foundation
 
 public class SurfaceData {
+    
+    public init() {}
+    
     @available(OSX 10.12, *)
     public func getData(param: RequestParam, timeout: DispatchTime, resultHandle: @escaping (Data) -> Void) throws {
         let urls = try param.requestURL()

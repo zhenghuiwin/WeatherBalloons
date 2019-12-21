@@ -13,7 +13,6 @@ public class Config {
     
     public class func load() throws -> ConfigInfo {
         let configData = try Data(contentsOf: URL(fileURLWithPath: configPath))
-
         let jsonDecoder = JSONDecoder()
         let configInfo = try jsonDecoder.decode(ConfigInfo.self, from: configData)
         

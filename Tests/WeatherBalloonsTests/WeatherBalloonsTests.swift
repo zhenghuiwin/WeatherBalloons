@@ -95,13 +95,13 @@ final class WeatherBalloonsTests: XCTestCase {
     @available(OSX 10.12, *)
     func testParamsURL() throws {
         let confg = try Config.load()
-        let param = try RequestParam(
+        let param = RequestParam(
                                  interface: "getSurfEleInRegionByTimeRange",
-                                 dataCode: "SURF_CHN_MUL_HOR_N",
-                                 elements: ["Station_Name","Station_Id_C","TEM", "Datetime"],
+                                 dataCode: "SURF_CHN_MUL_MON",
+                                 elements: ["Station_Name","Station_Id_C","PRE_Time_2020", "Datetime", "Year", "Mon"],
                                  params: ["dataFormat" : "json", "adminCodes": "510800"],
                                  config: confg,
-                                 timeRange: ["20191201000000", "20191202000000"])
+                                 timeRange: ["20080101000000", "20081201000000"])
         
         let urls = try param.requestURL()
         

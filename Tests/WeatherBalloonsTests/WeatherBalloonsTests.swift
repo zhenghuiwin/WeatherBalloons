@@ -95,15 +95,15 @@ final class WeatherBalloonsTests: XCTestCase {
     @available(OSX 10.12, *)
     func testParamsURL() throws {
         let confg = try Config.load()
+        // ["20080101000000", "20081201000000"]
         let param = RequestParam(
-                                 interface: "getSurfEleInRegionByTimeRange",
-                                 dataCode: "SURF_CHN_MUL_MON",
-                                 elements: ["Station_Name","Station_Id_C","PRE_Time_2020", "Datetime", "Year", "Mon"],
-                                 params: ["dataFormat" : "json", "adminCodes": "510800"],
-                                 config: confg,
-                                 timeRange: ["20080101000000", "20081201000000"])
-        
-        let urls = try param.requestURL()
+            interface: "getSurfEleInRegionByTimeRange",
+            dataCode:  "SURF_CHN_MUL_MON",
+            elements:  ["Station_Name","Station_Id_C","PRE_Time_2020", "Datetime", "Year", "Mon"],
+            params:    ["dataFormat" : "json", "adminCodes": "510800"],
+            config:    confg,
+            timeType:  .timeRange(start: "20080101000000", end: "20081201000000")
+        )
         
         let sfData = SurfaceData()
         try sfData.getData(param: param, timeout: DispatchTime.distantFuture) { (data)  in
@@ -118,6 +118,36 @@ final class WeatherBalloonsTests: XCTestCase {
         }
     }
     
+    
+    @available(OSX 10.12, *)
+   func testParamsURL01() throws {
+       let confg = try Config.load()
+       // ["20080101000000", "20081201000000"]
+       let param = RequestParam(
+           interface: "getSurfEleInRegionByTime",
+           dataCode:  "SURF_CHN_MUL_MON",
+           elements:  ["Station_Name","Station_Id_C","PRE_Time_2020", "Datetime", "Year", "Mon"],
+           params:    ["dataFormat" : "json", "adminCodes": "510800"],
+           config:    confg,
+           timeType:  .times(times: ["20080101000000", "20080201000000"])
+       )
+       
+       let sfData = SurfaceData()
+       try sfData.getData(param: param, timeout: DispatchTime.distantFuture) { (data)  in
+           if let out =  String(data: data, encoding: String.Encoding.utf8) {
+                print(out)
+            let target = "{\"returnCode\":\"0\","
+            let r = out.contains(target)
+            XCTAssertTrue(r)
+//               do {
+//                   try out.write(to: URL(fileURLWithPath: "./data/out.json"), atomically: false, encoding: String.Encoding.utf8)
+//               } catch let e {
+//                   print(e.localizedDescription)
+//               }
+           }
+       }
+   }
+    
 
 
     @available(OSX 10.12, *)
@@ -127,6 +157,7 @@ final class WeatherBalloonsTests: XCTestCase {
         ("testTimeRangeSlice01", testTimeRangeSlice01),
         ("testTimeRangeSlice02", testTimeRangeSlice02),
         ("testParams", testParams),
-        ("testParamsURL", testParamsURL)
+//        ("testParamsURL", testParamsURL),
+        ("testParamsURL01", testParamsURL01)
     ]
 }

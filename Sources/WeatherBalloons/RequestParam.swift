@@ -14,7 +14,8 @@ public struct RequestParam {
     let elements: [String]
     let params: [String : String]
     let config: ConfigInfo
-    let timeRange: [String]
+//    let timeRange: [String]
+    let timeType: TimeType
     
     var fmt: DateFormatter  {
         let df = DateFormatter()
@@ -25,22 +26,19 @@ public struct RequestParam {
     
    
     
-    public init(interface: String, dataCode: String, elements: [String], params: [String : String], config: ConfigInfo, timeRange: [String]) {
+    public init(interface: String, dataCode: String, elements: [String], params: [String : String], config: ConfigInfo, timeType: TimeType) {
         self.interface = interface
         self.dataCode = dataCode
         self.elements = elements
         self.params = params
         self.config = config
-        self.timeRange = timeRange
+        self.timeType = timeType
     }
     
+    
+    ///
+    ///  - Throws: TimeError.InvalidTime
     public func requestURL() throws -> [URL] {
-        let interval = try timeInterval()
-        let timeSlice: [DateInterval] = Utils.timeRangeSlice(
-            interval: interval,
-            days: config.intervalDays
-        )
-        
         var urlStr =
             "\(config.host)?"           +
             "userId=\(config.user)"     +
@@ -50,7 +48,7 @@ public struct RequestParam {
         
         
         let paramPairs: String = params.filter({ (key, value) -> Bool in
-            return key != "times" && key != "timeRange"
+            return key != "times" && key != "timeRange" && key != "time"
         }).map { (key, value) -> String in
             return "\(key)=\(value)"
         }.joined(separator: "&")
@@ -63,55 +61,71 @@ public struct RequestParam {
             urlStr += "&elements=\(elements.joined(separator: ","))"
         }
         
-        
-        var urlStrs: [String] = []
-        
-        if timeSlice.count == 1
-            && timeSlice[0].start.compare(timeSlice[0].end) == .orderedSame {
-            // Only a single time
-            urlStrs.append("\(urlStr)&times=\(fmt.string(from: timeSlice[0].start))")
-        } else {
-            timeSlice.map { (range) -> String in
-               return "[\(fmt.string(from: range.start)),\(fmt.string(from: range.end))]"
-            }.forEach { (r) in
-               urlStrs.append("\(urlStr)&timeRange=\(r)")
+        return try urls(with: timeType, for: urlStr)
+    }
+    
+    ///
+    /// - Throws: TimeError.InvalidTime
+    private func urls(with timeType: TimeType, for urlBase: String) throws -> [URL] {
+        switch timeType {
+        case .time(let time):
+            let newUrl = "\(urlBase)&time=\(time)"
+            guard let url = encodedURL(for: newUrl) else {
+                return []
             }
-        }
-        
-        var urls: [URL] = []
-        urlStrs.forEach { (url) in
-            guard let encoded = url.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed),
-                let url = URL(string: encoded) else {
-                    print("Invalid URL: \(urlStr)")
-                    return
+            
+            return [url]
+        case .timeRange(let start, let end):
+            let timeRange: DateInterval = try timeInterval(start: start, end: end)
+            let timeRangeSlice: [DateInterval] = Utils.timeRangeSlice(
+                interval: timeRange,
+                days: config.intervalDays
+            )
+            
+            let urlsString: [String] = timeRangeSlice.map { (slice) -> String in
+                let sliceString = "[\(fmt.string(from: slice.start)),\(fmt.string(from: slice.end))]"
+                return "\(urlBase)&timeRange=\(sliceString)"
             }
-            urls.append(url)
+            
+            var urls: [URL] = []
+            urlsString.forEach { (urlString) in
+                if let url = encodedURL(for: urlString) {
+                    urls.append(url)
+                }
+            }
+            
+            return urls
+        case .times(let times):
+            let newUrl = "\(urlBase)&times=\(times.joined(separator: ","))"
+            guard let url = encodedURL(for: newUrl) else {
+                return []
+            }
+            
+            return [url]
         }
-        
-        return urls
     }
     
     
-    /// -Throws:  TimeError.InvalidTime
-    private func timeInterval() throws -> DateInterval {
-        guard timeRange.count >= 1,
-              let start = fmt.date(from: timeRange.first!) else {
+    private func encodedURL(for urlString: String) -> URL? {
+        guard let encoded = urlString.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed),
+            let url = URL(string: encoded) else {
+                print("Invalid URL: \(urlString)")
+                return nil
+        }
+        
+        return url
+    }
+    
+    /// - Throws:  TimeError.InvalidTime
+    private func timeInterval(start: String, end: String) throws -> DateInterval {
+        guard let sDate = fmt.date(from: start) else {
             throw TimeError.InvalidTime
         }
         
-        if timeRange.count == 1 {
-            return DateInterval(start: start, end: start)
-        }
-        
-        guard let end = fmt.date(from: timeRange[1]) else {
+        guard let eDate = fmt.date(from: end) else {
             throw TimeError.InvalidTime
         }
         
-        
-        if start.compare(end) == .orderedDescending {
-            return DateInterval(start: end, end: start)
-        }
-        
-        return DateInterval(start: start, end: end)
+        return DateInterval(start: sDate, end: eDate)
     }
 }

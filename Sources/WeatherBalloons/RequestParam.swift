@@ -35,6 +35,11 @@ public struct RequestParam {
         self.timeType = timeType
     }
     
+    public init(interface: String, dataCode: String, elements: [String], params: [String : String], timeType: TimeType) throws {
+        let config = try Config.load()
+        self.init(interface: interface, dataCode: dataCode, elements: elements, params: params, config: config, timeType: timeType)
+    }
+    
     
     ///
     ///  - Throws: TimeError.InvalidTime

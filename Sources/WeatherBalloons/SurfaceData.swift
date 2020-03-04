@@ -12,33 +12,27 @@ public class SurfaceData {
     public init() {}
     
     @available(OSX 10.12, *)
-    public func getData(param: RequestParam, timeout: DispatchTime, resultHandle: @escaping (Data?, URLResponse?, Error?) -> Void) throws {
+    public func getData(param: RequestParam, timeout: DispatchTime, resultHandle: @escaping (Data?, URLResponse?, ResponseError?) -> Void) throws {
         let urls = try param.requestURL()
         
         let semaphore = DispatchSemaphore(value: 0)
         var count = urls.count
         for url in urls {
-            print(url)
             let task = URLSession.shared.dataTask(with: url) {(data, rep, error) in
                 
                 defer {
                     count -= 1
                     if count == 0 {
-                        print("URLSession.shared.dataTask: semaphore signal")
                         semaphore.signal()
                     }
                 }
                 
-//                if error != nil {
-//                    print("URLSession.shared.dataTask error: \(error!.localizedDescription)")
-//                    return
-//                }
-//
-//                guard let data = data else {
-//                    return
-//                }
+                if error != nil {
+                    resultHandle(data, rep, ResponseError(sourceError: error!, taskURL: url))
+                    return
+                }
                 
-                resultHandle(data, rep, error)
+                resultHandle(data, rep, nil)
             }
             
             task.resume()

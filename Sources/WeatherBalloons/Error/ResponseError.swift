@@ -8,8 +8,8 @@
 import Foundation
 
 public struct ResponseError {
-    let sourceError: Error
-    let taskURL: URL
+    public let sourceError: Error
+    public let taskURL: URL
     
     public init(sourceError: Error, taskURL: URL) {
         self.sourceError = sourceError
